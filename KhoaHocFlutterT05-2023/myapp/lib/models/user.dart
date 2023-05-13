@@ -35,21 +35,22 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      lastName: json['last_name'],
-      id: json['id'],
-      email: json['email'],
-      dateOfBirth: DateTime.parse(json['date_of_birth']),
-      job: json['job'],
-      city: json['city'],
-      zipcode: json['zipcode'],
-      latitude: json['latitude'],
-      gender: json['gender'],
-      firstName: json['first_name'],
-      phone: json['phone'],
-      street: json['street'],
-      state: json['state'],
-      country: json['country'],
-      longitude: json['longitude'],
+      lastName: json['last_name'] ?? "",
+      id: json['id'] ?? 0,
+      email: json['email'] ?? "",
+      dateOfBirth: DateTime.parse(json['date_of_birth'] ?? ""),
+      job: json['job'] ?? "",
+      city: json['city'] ?? "",
+      zipcode: json['zipcode'] ?? "",
+      latitude: json['latitude'] ?? 0.0,
+      gender: json['gender'] ?? "",
+      firstName: json['first_name'] ?? "",
+      phone: json['phone'] ?? "",
+      street: json['street'] ?? "",
+      state: json['state'] ?? "",
+      country: json['country'] ?? "",
+      longitude: json['longitude'] ?? 0.0,
     );
   }
+
 }

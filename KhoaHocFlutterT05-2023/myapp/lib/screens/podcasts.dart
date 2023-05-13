@@ -26,12 +26,13 @@ class _PodcastsState extends State<Podcasts> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _fetchUsers();
     // Lắng nghe sự kiện cuối danh sách đạt đến vị trí cụ thể
     _scrollController.addListener((){
       if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
           !_scrollController.position.outOfRange) {
         // Đã cuộn đến cuối danh sách
-        print('Scroll to end');
+        print('page: ${_offset / _limit + 1}');
         _fetchUsers();
         // Xử lý tại đây
       }
@@ -187,4 +188,30 @@ Giá trị trả về có trường users là mảng các đối tượng có c�
 viết phần gọi api lấy dữ liệu trả về, yêu cầu có models
 Khi scroll đến cuối danh sách, sẽ tự động gọi api đến trang tiếp theo, kiểu như chức năng load more
 
+* */
+
+/*
+Hãy viết chi tiết phần validate vào đoạn này:
+VD: nếu json['last_name'] là null hoặc empty thì giá trị mặc định là ""
+nếu json['longitude'] là null => giá trị là 0,....
+
+factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      lastName: json['last_name'],
+      id: json['id'],
+      email: json['email'],
+      dateOfBirth: DateTime.parse(json['date_of_birth']),
+      job: json['job'],
+      city: json['city'],
+      zipcode: json['zipcode'],
+      latitude: json['latitude'],
+      gender: json['gender'],
+      firstName: json['first_name'],
+      phone: json['phone'],
+      street: json['street'],
+      state: json['state'],
+      country: json['country'],
+      longitude: json['longitude'],
+    );
+  }
 * */
