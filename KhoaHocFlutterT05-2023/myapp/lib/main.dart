@@ -6,9 +6,12 @@ import 'package:myapp/screens/splash.dart';
 import 'package:myapp/utilities/dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get_it/get_it.dart';
+import 'repositories/user_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GetIt.instance.registerLazySingleton<UserRepository>(() => UserRepository());
   // Kiểm tra xem ứng dụng đã được nâng cấp hay chưa
   final prefs = await SharedPreferences.getInstance();
   runApp(const MyApp());

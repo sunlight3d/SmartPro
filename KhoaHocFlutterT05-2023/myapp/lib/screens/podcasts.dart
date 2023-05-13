@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:myapp/models/user.dart';
+import 'package:myapp/repositories/user_repository.dart';
 
 /*
 https://api.slingacademy.com/v1/sample-data/users?offset=20&limit=10
@@ -17,6 +19,9 @@ class Podcasts extends StatefulWidget {
 
 class _PodcastsState extends State<Podcasts> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final userRepository = GetIt.instance.get<UserRepository>();
+
   List<User> _users = [];
   bool _isLoading = false;
   int _offset = 0;
@@ -43,31 +48,12 @@ class _PodcastsState extends State<Podcasts> {
     setState(() {
       _isLoading = true;
     });
-    try {
-      final response = await http.get(
-          Uri.parse('https://api.slingacademy.com/v1/sample-data/users?offset=$_offset&limit=$_limit'));
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        final List<dynamic> userJsonList = jsonData['users'];
-
-        List<User> fetchedUsers = userJsonList
-                  .map((json) => User.fromJson(json))
-                  .toList();//convert list of Json => list of Users
-        setState(() {
-          _users.addAll(fetchedUsers);
-          _offset += _limit;
-          _isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to fetch users');
-      }
-    } catch (error) {
-      print(error);
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    List<User> fetchedUsers = await userRepository.fetchUsers(_offset);
+    setState(() {
+      _users.addAll(fetchedUsers);
+      _offset += _limit;
+      _isLoading = false;
+    });
   }
   @override
   void dispose() {
@@ -85,6 +71,7 @@ class _PodcastsState extends State<Podcasts> {
               child: Row(
                 children: [
                   Expanded(child: TextField(
+                    controller: _searchController,
                     obscureText: false,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
@@ -214,4 +201,11 @@ factory User.fromJson(Map<String, dynamic> json) {
       longitude: json['longitude'],
     );
   }
+* */
+
+/*
+Hãy tách riêng phần gọi api lấy users vào 1 class tên là UserRepository
+tách baseUrl thành 1 biến riêng để tái sử dụng cho các Repository khác
+Inject UserRepository 1 lần ngay khi khởi động app
+
 * */
