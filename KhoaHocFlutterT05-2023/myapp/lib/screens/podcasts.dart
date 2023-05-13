@@ -1,4 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:myapp/models/user.dart';
+
+/*
+https://api.slingacademy.com/v1/sample-data/users?offset=20&limit=10
+*/
 
 class Podcasts extends StatefulWidget {
   const Podcasts({Key? key}) : super(key: key);
@@ -9,6 +17,11 @@ class Podcasts extends StatefulWidget {
 
 class _PodcastsState extends State<Podcasts> {
   final ScrollController _scrollController = ScrollController();
+  List<User> _users = [];
+  bool _isLoading = false;
+  int _offset = 0;
+  int _limit = 10;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -19,9 +32,47 @@ class _PodcastsState extends State<Podcasts> {
           !_scrollController.position.outOfRange) {
         // Đã cuộn đến cuối danh sách
         print('Scroll to end');
+        _fetchUsers();
         // Xử lý tại đây
       }
     });
+  }
+  Future<void> _fetchUsers() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final response = await http.get(
+          Uri.parse('https://api.slingacademy.com/v1/sample-data/users?offset=$_offset&limit=$_limit'));
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List<dynamic> userJsonList = jsonData['users'];
+
+        List<User> fetchedUsers = userJsonList
+                  .map((json) => User.fromJson(json))
+                  .toList();//convert list of Json => list of Users
+        setState(() {
+          _users.addAll(fetchedUsers);
+          _offset += _limit;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to fetch users');
+      }
+    } catch (error) {
+      print(error);
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _scrollController.dispose();
   }
   @override
   Widget build(BuildContext context) {
@@ -61,35 +112,47 @@ class _PodcastsState extends State<Podcasts> {
             Expanded(
                 child: ListView.builder(
                   controller: _scrollController, // Sử dụng ScrollController
-                  itemCount: 20,
+                  itemCount: _users.length + (_isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
-                    return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Image.network(
-                                  'https://picsum.photos/250?image=9',
-                                  width: 100,
-                                  height: 100,
+                    if (index < _users.length) {
+                      final user = _users[index];
+                      return Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  child: Image.network(
+                                    'https://picsum.photos/250?image=9',
+                                    width: 100,
+                                    height: 100,
+                                  ),
                                 ),
-                              ),
 
-                              SizedBox(width: 10,),
-                              Expanded(child: Text('Item $index', style: TextStyle(fontSize: 16),),),
-                              Icon(Icons.face_2)
-                            ],
-                          ),
-                          SizedBox(height: 10,),
-                          Container(height: 1,decoration:
+                                SizedBox(width: 10,),
+                                Expanded(child:
+                                Text('${user.firstName} ${user.lastName}',
+                                  style: TextStyle(fontSize: 16),),),
+                                Icon(Icons.face_2)
+                              ],
+                            ),
+                            SizedBox(height: 10,),
+                            Container(height: 1,decoration:
                             BoxDecoration(color: Colors.blue),
-                          )
-                        ],
-                      ),
-                    );
+                            )
+                          ],
+                        ),
+                      );
+                    } else if (_isLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else {
+                      return SizedBox();
+                    }
+
                   },
                 )
             )
@@ -99,3 +162,29 @@ class _PodcastsState extends State<Podcasts> {
     );
   }
 }
+
+/*
+Trong Flutter, tôi gọi api đến:
+https://api.slingacademy.com/v1/sample-data/users?offset=20&limit=10
+Giá trị trả về có trường users là mảng các đối tượng có các fields sau:
+{
+"last_name": "Todd",
+"id": 22,
+"email": "wilsonharold@example.com",
+"date_of_birth": "1997-07-12T00:00:00",
+"job": "Journalist, newspaper",
+"city": "Lake Taylorton",
+"zipcode": "62791",
+"latitude": 82.3926255,
+"gender": "female",
+"first_name": "Rebecca",
+"phone": "038.420.7539x46680",
+"street": "8575 Chris Mount",
+"state": "Florida",
+"country": "Albania",
+"longitude": 116.869109
+},
+viết phần gọi api lấy dữ liệu trả về, yêu cầu có models
+Khi scroll đến cuối danh sách, sẽ tự động gọi api đến trang tiếp theo, kiểu như chức năng load more
+
+* */
